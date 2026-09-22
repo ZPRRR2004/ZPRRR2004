@@ -1,6 +1,8 @@
 """Render the authenticated GitHub contribution calendar with stdlib only."""
 import datetime as dt
 import html
+import hashlib
+import re
 import json
 import os
 from pathlib import Path
@@ -80,4 +82,11 @@ if __name__ == '__main__':
     output = ROOT / 'assets/contribution-constellation.svg'
     output.parent.mkdir(exist_ok=True)
     output.write_text(render(calendar, username), encoding='utf-8')
+    # Give each rendered image a distinct URL so profile image caches refresh.
+    digest = hashlib.sha256(output.read_bytes()).hexdigest()[:16]
+    readme = ROOT / 'README.md'
+    if readme.exists():
+        text = readme.read_text(encoding='utf-8')
+        text = re.sub(r'(assets/contribution-constellation\\.svg)(?:\\?v=[a-zA-Z0-9_-]+)?', lambda match: match.group(1) + '?v=' + digest, text)
+        readme.write_text(text, encoding='utf-8')
     print(f'Rendered {calendar["totalContributions"]} contributions to {output}')
