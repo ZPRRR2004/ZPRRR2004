@@ -33,63 +33,33 @@ def fetch_calendar(username):
 
 def render(calendar, username):
     weeks = calendar['weeks']
-    days = [d for w in weeks for d in w['contributionDays']]
-    active = sum(d['contributionCount'] > 0 for d in days)
-    total = calendar['totalContributions']
-    esc = html.escape
-    svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" role="img" aria-labelledby="title desc">',
-        '<title id="title">Contribution Constellation</title>',
-        f'<desc id="desc">{esc(username)}: {total} contributions across {active} active days. Each star is one day; brightness follows contribution activity.</desc>',
-        '<defs><radialGradient id="sky"><stop stop-color="#17233b"/><stop offset="1" stop-color="#080e1b"/></radialGradient>',
-        '<radialGradient id="halo"><stop stop-color="#9adaff" stop-opacity=".4"/><stop offset="1" stop-color="#9adaff" stop-opacity="0"/></radialGradient></defs>',
-        '<rect x="1" y="1" width="998" height="418" rx="20" fill="url(#sky)" stroke="#26324a"/>',
-        '<g font-family="Segoe UI,Arial,sans-serif">',
-        '<text x="44" y="42" fill="#8ba5c5" font-size="11" letter-spacing="3">THE OBSERVATORY / ZPRRR2004</text>',
-        '<text x="44" y="84" fill="#edf4ff" font-size="30" font-weight="600">Contribution Constellation</text>',
-        '<text x="44" y="110" fill="#93a6bf" font-size="13">Small steps. A growing universe.</text>',
-        f'<text x="954" y="64" text-anchor="end" fill="#fff0bc" font-size="26">{total:,}</text>',
-        '<text x="954" y="86" text-anchor="end" fill="#93a6bf" font-size="11" letter-spacing="1">CONTRIBUTIONS</text>']
-    pitch = min(17, 884 / max(len(weeks)-1, 1))
+    svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="300" viewBox="0 0 1000 300" role="img" aria-labelledby="title">',
+        '<title id="title">Stars from ' + html.escape(username) + ' contribution history</title>',
+        '<defs><radialGradient id="glow"><stop stop-color="#ffffff" stop-opacity=".38"/><stop offset=".28" stop-color="#e5efff" stop-opacity=".12"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs>',
+        '<rect width="1000" height="300" fill="#000000"/>']
+    pitch = 880 / max(len(weeks)-1, 1)
     stars = []
-    last_month = None
-    last_label_x = -100
     for wi, week in enumerate(weeks):
         for day in week['contributionDays']:
-            date = dt.date.fromisoformat(day['date'])
-            x, y = 66 + wi * pitch, 166 + day['weekday'] * 21
-            month = date.strftime('%b')
-            if month != last_month:
-                if wi < len(weeks)-2 and x - last_label_x >= 38:
-                    svg.append(f'<text x="{x:.1f}" y="143" fill="#70849f" font-size="10">{month}</text>')
-                    last_label_x = x
-                last_month = month
+            if day['contributionCount'] <= 0:
+                continue
             level = LEVELS.index(day['contributionLevel'])
-            if level:
-                stars.append((x,y,level,day))
-            else:
-                svg.append(f'<rect x="{x-2:.1f}" y="{y-2}" width="4" height="4" rx="1" fill="#26334b" opacity=".7"/>')
-    # Short links are decorative only; day positions stay on the real calendar.
-    for i, (x,y,level,day) in enumerate(stars):
-        nearby = [(px,py) for px,py,_,_ in stars[:i] if 0 < x-px <= pitch*3 and abs(y-py) <= 45]
+            x, y = 60 + wi * pitch, 60 + day['weekday'] * 30
+            r = .85 + level * .32
+            stars.append((x, y))
+            svg.append(f'<g><title>{day["date"]}: {day["contributionCount"]} contributions</title>')
+            svg.append(f'<circle cx="{x:.2f}" cy="{y}" r="{5+level*1.8:.2f}" fill="url(#glow)"/>')
+            svg.append(f'<circle cx="{x:.2f}" cy="{y}" r="{r:.2f}" fill="#ffffff" opacity="{.6+level*.1:.2f}"/>')
+            svg.append('</g>')
+    links = []
+    for i, (x, y) in enumerate(stars):
+        nearby = [(j, px, py) for j, (px, py) in enumerate(stars[:i])
+                  if (px-x)**2 + (py-y)**2 <= 100**2]
         if nearby:
-            px,py = min(nearby, key=lambda p:(p[0]-x)**2+(p[1]-y)**2)
-            svg.append(f'<path d="M {px:.1f} {py} L {x:.1f} {y}" stroke="#7196c7" stroke-width=".8" opacity=".23"/>')
-    for x,y,level,day in stars:
-        r = 1.5 + level*.65
-        svg.append(f'<g><title>{day["date"]}: {day["contributionCount"]} contributions</title>')
-        svg.append(f'<circle cx="{x:.1f}" cy="{y}" r="{5+level*2}" fill="url(#halo)"/>')
-        svg.append(f'<circle cx="{x:.1f}" cy="{y}" r="{r}" fill="{COLORS[level]}"/>')
-        if level == 4:
-            svg.append(f'<path d="M {x-7:.1f} {y} H {x+7:.1f} M {x:.1f} {y-7} V {y+7}" stroke="#fff0bc" opacity=".7" stroke-width=".8"/>')
-        svg.append('</g>')
-    svg += ['<path d="M44 325 H956" stroke="#253149"/>',
-        f'<text x="44" y="355" fill="#c2d1e6" font-size="13">{active} active days / {len(days)} days mapped</text>',
-        f'<text x="44" y="382" fill="#70849f" font-size="11">{days[0]["date"]} — {days[-1]["date"]} · GitHub contribution data</text>',
-        '<text x="760" y="355" fill="#8ba5c5" font-size="11">QUIET</text>',
-        '<text x="916" y="355" fill="#8ba5c5" font-size="11">BRIGHT</text>']
-    for i,c in enumerate(COLORS):
-        svg.append(f'<circle cx="{815+i*20}" cy="351" r="{2+i*.6}" fill="{c}"/>')
-    svg.append('</g></svg>')
+            j, px, py = min(nearby, key=lambda p:(p[1]-x)**2+(p[2]-y)**2)
+            links.append(f'<line data-a="{j}" data-b="{i}" x1="{px:.2f}" y1="{py}" x2="{x:.2f}" y2="{y}" stroke="#ffffff" stroke-opacity=".2" stroke-width=".65"/>')
+    svg[4:4] = links
+    svg.append('</svg>')
     return '\n'.join(svg)+'\n'
 
 
