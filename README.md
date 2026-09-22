@@ -1,16 +1,37 @@
-## Hi there 👋
+<div align="center">
 
-<!--
-**ZPRRR2004/ZPRRR2004** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+# Hi, I'm Zeping 阮泽平
 
-Here are some ideas to get you started:
+Computer Science undergraduate · ShanghaiTech University
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+**LLMs &nbsp; / &nbsp; AI Agents &nbsp; / &nbsp; Interpretability**
+
+Exploring how agents act, reason, and use evidence.
+
+<br>
+
+[![Contribution constellation — each star represents one day of GitHub activity](./assets/contribution-constellation.svg)](./assets/contribution-constellation.svg)
+
+<sub>One day, one position in the sky. More contributions, brighter stars.</sub>
+
+</div>
+
+<br>
+
+### On my workbench
+
+| Project | Exploring |
+| :--- | :--- |
+| [Agent trajectory analysis](https://github.com/ZPRRR2004/llm_Iterative_Edge_Type) | Semantic relationships between actions and observations |
+| [LLM attacks](https://github.com/ZPRRR2004/llm-attacks) | Adversarial prompts and language model robustness |
+| [Seam carving](https://github.com/ZPRRR2004/Seam-Carving) | Content-aware image resizing |
+
+### Tools I work with
+
+Python · PyTorch · C++ · Git · Docker
+
+---
+
+<div align="center">
+<sub>A little more code. A little more light.</sub>
+</div>
