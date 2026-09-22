@@ -32,33 +32,44 @@ def fetch_calendar(username):
 
 
 def render(calendar, username):
+    import random
+    rng = random.Random(27)
     weeks = calendar['weeks']
-    svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="300" viewBox="0 0 1000 300" role="img" aria-labelledby="title">',
+    svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="360" viewBox="0 0 1000 360" role="img" aria-labelledby="title">',
         '<title id="title">Stars from ' + html.escape(username) + ' contribution history</title>',
-        '<defs><radialGradient id="glow"><stop stop-color="#ffffff" stop-opacity=".38"/><stop offset=".28" stop-color="#e5efff" stop-opacity=".12"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs>',
-        '<rect width="1000" height="300" fill="#000000"/>']
-    pitch = 880 / max(len(weeks)-1, 1)
+        '<defs><radialGradient id="nebula"><stop stop-color="#182443" stop-opacity=".65"/><stop offset=".48" stop-color="#0a1026" stop-opacity=".4"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient><radialGradient id="violet"><stop stop-color="#251736" stop-opacity=".4"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient><radialGradient id="glow"><stop stop-color="#eef8ff" stop-opacity=".7"/><stop offset=".12" stop-color="#bfdfff" stop-opacity=".4"/><stop offset=".35" stop-color="#78aaff" stop-opacity=".12"/><stop offset="1" stop-color="#5799ff" stop-opacity="0"/></radialGradient><linearGradient id="ray"><stop stop-color="#b3daff" stop-opacity="0"/><stop offset=".5" stop-color="#eef8ff" stop-opacity=".8"/><stop offset="1" stop-color="#b3daff" stop-opacity="0"/></linearGradient></defs>',
+        '<rect width="1000" height="360" fill="#000"/>',
+        '<ellipse cx="580" cy="220" rx="420" ry="150" transform="rotate(-17 580 220)" fill="url(#nebula)"/>',
+        '<ellipse cx="310" cy="180" rx="270" ry="110" transform="rotate(-22 310 180)" fill="url(#violet)"/>']
+    # Faint decorative background dust is distinct from the larger contribution stars.
+    for i in range(320):
+        x, y = rng.uniform(14,986), rng.uniform(12,348)
+        r = rng.uniform(.25,.8)
+        svg.append(f'<circle data-dust="true" cx="{x:.2f}" cy="{y:.2f}" r="{r:.2f}" fill="#b9cde6" opacity="{rng.uniform(.1,.45):.2f}"/>')
     stars = []
+    pitch = 880 / max(len(weeks)-1, 1)
     for wi, week in enumerate(weeks):
         for day in week['contributionDays']:
             if day['contributionCount'] <= 0:
                 continue
             level = LEVELS.index(day['contributionLevel'])
-            x, y = 60 + wi * pitch, 60 + day['weekday'] * 30
-            r = .85 + level * .32
-            stars.append((x, y))
-            svg.append(f'<g><title>{day["date"]}: {day["contributionCount"]} contributions</title>')
-            svg.append(f'<circle cx="{x:.2f}" cy="{y}" r="{5+level*1.8:.2f}" fill="url(#glow)"/>')
-            svg.append(f'<circle cx="{x:.2f}" cy="{y}" r="{r:.2f}" fill="#ffffff" opacity="{.6+level*.1:.2f}"/>')
-            svg.append('</g>')
-    links = []
-    for i, (x, y) in enumerate(stars):
-        nearby = [(j, px, py) for j, (px, py) in enumerate(stars[:i])
-                  if (px-x)**2 + (py-y)**2 <= 100**2]
+            x, y = 60 + wi * pitch, 75 + day['weekday'] * 35
+            stars.append((x,y,level,day))
+    for i, (x,y,_,_) in enumerate(stars):
+        nearby = [(j,px,py) for j,(px,py,_,_) in enumerate(stars[:i]) if (px-x)**2+(py-y)**2 <= 115**2]
         if nearby:
-            j, px, py = min(nearby, key=lambda p:(p[1]-x)**2+(p[2]-y)**2)
-            links.append(f'<line data-a="{j}" data-b="{i}" x1="{px:.2f}" y1="{py}" x2="{x:.2f}" y2="{y}" stroke="#ffffff" stroke-opacity=".2" stroke-width=".65"/>')
-    svg[4:4] = links
+            j,px,py = min(nearby,key=lambda p:(p[1]-x)**2+(p[2]-y)**2)
+            svg.append(f'<line data-a="{j}" data-b="{i}" x1="{px:.2f}" y1="{py}" x2="{x:.2f}" y2="{y}" stroke="#a2c7ef" stroke-opacity=".22" stroke-width=".65"/>')
+    for x,y,level,day in stars:
+        r, halo = .8+level*.3, 10+level*4
+        svg.append(f'<g data-star="true"><title>{day["date"]}: {day["contributionCount"]} contributions</title>')
+        svg.append(f'<circle cx="{x:.2f}" cy="{y}" r="{halo}" fill="url(#glow)"/>')
+        svg.append(f'<circle cx="{x:.2f}" cy="{y}" r="{r:.2f}" fill="#f3f8ff"/>')
+        if level >= 2:
+            arm = 3+level*2
+            svg.append(f'<rect x="{x-arm:.2f}" y="{y-.35:.2f}" width="{arm*2}" height=".7" fill="url(#ray)"/>')
+            svg.append(f'<rect x="{x-arm:.2f}" y="{y-.35:.2f}" width="{arm*2}" height=".7" fill="url(#ray)" transform="rotate(90 {x:.2f} {y})"/>')
+        svg.append('</g>')
     svg.append('</svg>')
     return '\n'.join(svg)+'\n'
 
