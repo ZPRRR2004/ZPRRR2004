@@ -87,6 +87,6 @@ if __name__ == '__main__':
     readme = ROOT / 'README.md'
     if readme.exists():
         text = readme.read_text(encoding='utf-8')
-        text = re.sub(r'(assets/contribution-constellation\\.svg)(?:\\?v=[a-zA-Z0-9_-]+)?', lambda match: match.group(1) + '?v=' + digest, text)
+        text = re.sub(r'(assets/contribution-constellation\.svg)(?:\?v=[a-zA-Z0-9_-]+)?', lambda match: match.group(1) + '?v=' + digest, text)
         readme.write_text(text, encoding='utf-8')
     print(f'Rendered {calendar["totalContributions"]} contributions to {output}')
