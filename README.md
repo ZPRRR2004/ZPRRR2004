@@ -11,5 +11,5 @@
 </p>
 
 <p align="center">
-  <img src="./assets/contribution-constellation.svg?v=4ddc6f47f241f220" width="100%" alt="Stars on a black sky" />
+  <img src="./assets/contribution-constellation.svg?v=cad9c332099a2d6b" width="100%" alt="Stars on a black sky" />
 </p>
